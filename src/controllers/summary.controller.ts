@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
-import { records } from '../data/records';
+import { prisma } from '../lib/prisma';
 
-export const getSummary = (_: Request, res: Response) => {
+export const getSummary = async (_: Request, res: Response) => {
+    const records = await prisma.record.findMany();
+
     const totalIncome = records
         .filter(r => r.type === 'Income')
         .reduce((sum, r) => sum + r.amount, 0);
@@ -12,15 +14,9 @@ export const getSummary = (_: Request, res: Response) => {
 
     const netBalance = totalIncome - totalExpense;
 
-    const categoryTotals = records.reduce((acc: any, record) => {
-        acc[record.category] = (acc[record.category] || 0) + record.amount;
-        return acc;
-    }, {});
-
     res.status(200).json({
         totalIncome,
         totalExpense,
-        netBalance,
-        categoryTotals
+        netBalance
     });
 };
